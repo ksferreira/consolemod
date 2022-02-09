@@ -1,24 +1,19 @@
 const { Console } = require('console');
 const fs = require('fs');
 const os = require('os');
+const path = require('path');
 const { spawn, exec } = require('child_process');
 const util = require('util');
 
+const { eventEmitter } = require('./lib/listener');
+
 const execProm = util.promisify(exec);
 
+const listenerPath = path.join(__dirname, 'lib', 'listener.js');
+const launchCodes = `node ${listenerPath}`;
+
 class ConsoleWindow {
-
-	// observe() {}
-
 	constructor(options) {
-		// Size?: Window Size
-		// Output?: file
-		// ErrorOutput?: if present, route errors to this file
-		// ColorMode?: 
-		// Timestamps? = False
-	
-
-		// Make sure we integrate custom and defaults.
 		let defaultOptions = { 
 			stdout: fs.createWriteStream('./out.log'),
 			sterr: fs.createWriteStream('./err.log')
@@ -37,7 +32,7 @@ class ConsoleWindow {
 	};
 
 	log(message) {
-		this.mainWindow.log(message);
+		eventEmitter.emit('log', messsage);
 	};
 
 	create () {
@@ -45,9 +40,23 @@ class ConsoleWindow {
 
 		switch (platform) {
 			case 'darwin':
-				exec('osascript', '-e', `tell app 'Terminal' to do "yadd yadda"`);
+				exec('osascript', ['-e', `
+					if application "Terminal" is running then
+						tell application "Terminal"
+							# do script without "in window" will open a new window        
+							do script "${launchCodes}"
+							activate
+						end tell
+						else
+						tell application "Terminal"
+							# window 1 is guaranteed to be recently opened window        
+							do script "${launchCodes}" in window 1
+							activate
+						end tell
+					end if
+				`]); // Thank you, Stack Overflow <3
 				break;
-			case 'linux': // untested
+			case 'linux': // untested. god help me.
 				let result
 				(async () => {
 					try {
@@ -62,7 +71,7 @@ class ConsoleWindow {
 				};
 				break;
 			case 'win32':
-				exec('cmd.exe /K node yadda yadda');
+				exec(`cmd.exe /K ${launchCodes}`);
 				break;
 		};
 	};
