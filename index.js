@@ -35,7 +35,7 @@ class ConsoleWindow {
 		eventEmitter.emit('log', messsage);
 	};
 
-	create () {
+	create() {
 		const platform = os.platform();
 
 		switch (platform) {
