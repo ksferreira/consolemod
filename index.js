@@ -71,7 +71,7 @@ class ConsoleWindow {
 				};
 				break;
 			case 'win32':
-				exec(`cmd.exe /K ${launchCodes}`);
+				exec(`start cmd.exe /K ${launchCodes}`);
 				break;
 		};
 	};
