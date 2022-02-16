@@ -4,13 +4,14 @@ const os = require('os');
 const path = require('path');
 const { spawn, exec } = require('child_process');
 const util = require('util');
-
-const { eventEmitter } = require('./lib/listener');
+const loadEvents = require('./lib/events')
 
 const execProm = util.promisify(exec);
 
 const listenerPath = path.join(__dirname, 'lib', 'listener.js');
 const launchCodes = `node ${listenerPath}`;
+
+const eventEmitter = loadEvents.default();
 
 class ConsoleWindow {
 	constructor(options) {
@@ -38,9 +39,11 @@ class ConsoleWindow {
 	create() {
 		const platform = os.platform();
 
+		console.log('Finding platform.')
 		switch (platform) {
 			case 'darwin':
-				exec('osascript', ['-e', `
+				console.log('Launching Apple Terminal')
+				spawn('osascript', ['-e', `
 					if application "Terminal" is running then
 						tell application "Terminal"
 							# do script without "in window" will open a new window        
@@ -67,15 +70,14 @@ class ConsoleWindow {
 				})();
 
 				if (result !== undefined) {
-					exec(`${result} -e `);
+					spawn(`${result} -e `);
 				};
 				break;
 			case 'win32':
-				exec(`start cmd.exe /K ${launchCodes}`);
+				spawn(`start cmd.exe /K ${launchCodes}`);
 				break;
 		};
 	};
 };
 
 module.exports.ConsoleWindow = ConsoleWindow;
-
